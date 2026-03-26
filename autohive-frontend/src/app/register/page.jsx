@@ -4,147 +4,203 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import axios from 'axios';
+import { useRouter } from 'next/navigation';
 
 export default function Register() {
-  const [isSeller, setIsSeller] = useState(false);
+  const [role, setRole] = useState('CUSTOMER');
+  const router = useRouter();
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    contactNo: '',
+    address: '',
+    password: '',
+    confirmPassword: ''
+  });
+
+  const [errors, setErrors] = useState("");
+  const [loading, setLoading] = useState(false);
+  
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (errors) setErrors("");
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrors("");
+
+    if (formData.password !== formData.confirmPassword) {
+            setError("Passwords do not match");
+            return;
+        }
+
+        setLoading(true);
+    try{
+      const registerRequest = {
+        fullName: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+        role: role,
+        contactNo: formData.contactNo,
+        address: formData.address
+      };
+      const response = await axios.post(
+        "http://localhost:8081/api/auth/register", {
+          ...registerRequest
+        }
+      );
+      console.log("Registration successful:", response.data);
+      router.push("/login");
+      
+      
+    } catch (err) {
+      if (err.response && err.response.data) {
+        setErrors(err.response.data.message || "Registration failed. Please try again.");
+      }
+  }finally{
+        setLoading(false);
+      }
+  };
 
   return (
     <div className="min-h-screen flex bg-slate-50 font-sans">
       
-      {/* Left Side: Branding & Value Prop */}
+      {/* Left Side: Branding & Dynamic Preview */}
       <div className="hidden lg:flex w-1/2 bg-brand-deep text-white flex-col justify-center items-center p-12 relative overflow-hidden">
         <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-brand-teal/20 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute top-0 right-0 w-64 h-64 bg-brand-teal/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
         
         <div className="max-w-lg text-center relative z-10">
           <Link href="/">
             <div className="flex-shrink-0 flex justify-center items-center mb-6">
-              <Image
-                src="/AutoHive-for-dark.png"
-                alt="AutoHive Logo"
-                width={300}
-                height={50}
-                priority
-              />
+              <Image src="/AutoHive-for-dark.png" alt="AutoHive Logo" width={300} height={50} priority />
             </div>
           </Link>
-          <p className="text-xl text-slate-300 mb-8">
-            Join the ultimate vehicle spare parts marketplace.
-          </p>
-          <div className="bg-white/5 rounded-2xl p-6 border border-white/10 text-left backdrop-blur-sm">
-            <ul className="space-y-4 text-slate-200">
-              <li className="flex items-center">
-                <span className="text-brand-teal mr-3 font-bold">✓</span> Find genuine parts instantly
-              </li>
-              <li className="flex items-center">
-                <span className="text-brand-teal mr-3 font-bold">✓</span> Compare quotes from top vendors
-              </li>
-              <li className="flex items-center">
-                <span className="text-brand-teal mr-3 font-bold">✓</span> Manage your fleet seamlessly
-              </li>
-            </ul>
+          
+          <div className="mt-8">
+            <p className="text-xl text-slate-300">
+              Join the AutoHive ecosystem as a <span className="text-brand-teal font-bold">{role.toLowerCase()}</span>.
+            </p>
+          </div>
+
+          <div className="mt-12 bg-white/5 rounded-2xl p-6 border border-white/10 text-left backdrop-blur-sm">
+             <p className="text-sm text-slate-400 mb-2 uppercase font-bold tracking-widest">Account Type</p>
+             <div className="flex items-center space-x-3">
+                <div className="w-3 h-3 rounded-full bg-brand-teal animate-pulse"></div>
+                <span className="text-lg font-medium">{role} ACCESS ENABLED</span>
+             </div>
           </div>
         </div>
       </div>
 
-      {/* Right Side: Interactive Form Container */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 relative">
+      {/* Right Side: Unified Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12">
         <div className="w-full max-w-md bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8 border border-slate-100">
           
-          <h2 className="text-3xl font-bold text-brand-deep text-center mb-6 tracking-tight">
-            {isSeller ? 'Register your Business' : 'Create an Account'}
-          </h2>
+          <h2 className="text-3xl font-bold text-brand-deep text-center mb-2 tracking-tight">Create Account</h2>
+          <p className="text-center text-slate-500 text-sm mb-8">One account for all your automotive needs.</p>
 
-          {/* User Type Toggle */}
-          <div className="flex bg-slate-100 p-1 rounded-xl mb-8">
-            <button
-              onClick={() => setIsSeller(false)}
-              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
-                !isSeller ? 'bg-white shadow-sm text-brand-deep' : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              Customer
-            </button>
-            <button
-              onClick={() => setIsSeller(true)}
-              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
-                isSeller ? 'bg-white shadow-sm text-brand-deep' : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              Seller 
-            </button>
-          </div>
-
-          <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+          <form className="space-y-4">
             
-            {!isSeller ? (
-              /* --- CUSTOMER --- */
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
-                  <input type="text" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-teal/50 focus:border-brand-teal outline-none transition-all text-sm" placeholder="John Doe" />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-                    <input type="email" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-teal/50 focus:border-brand-teal outline-none transition-all text-sm" placeholder="john@example.com" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
-                    <input type="tel" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-teal/50 focus:border-brand-teal outline-none transition-all text-sm" placeholder="+94 7X XXX XXXX" />
-                  </div>
-                </div>
-              </>
-            ) : (
-              /* --- SELLER (Hybrid Flow: No KYC at this step) --- */
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Business Name</label>
-                  <input type="text" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-teal/50 focus:border-brand-teal outline-none transition-all text-sm" placeholder="Auto Parts Co." />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Owner / Contact Person</label>
-                  <input type="text" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-teal/50 focus:border-brand-teal outline-none transition-all text-sm" placeholder="Jane Smith" />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Business Email</label>
-                    <input type="email" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-teal/50 focus:border-brand-teal outline-none transition-all text-sm" placeholder="contact@shop.com" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Business Phone</label>
-                    <input type="tel" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-teal/50 focus:border-brand-teal outline-none transition-all text-sm" placeholder="+94 7X XXX XXXX" />
-                  </div>
-                </div>
-                
-                {/* Note for Sellers */}
-                <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
-                  <p className="text-[11px] text-blue-700 leading-tight">
-                    <strong>Note:</strong> You can set up your store now. Business verification (KYC) will be required later to list items for sale.
-                  </p>
-                </div>
-              </>
-            )}
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
-                <input type="password" name="password" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-teal/50 focus:border-brand-teal outline-none transition-all text-sm" placeholder="••••••••" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Confirm</label>
-                <input type="password" name="confirmPassword" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-teal/50 focus:border-brand-teal outline-none transition-all text-sm" placeholder="••••••••" />
+            {/* Role Selection Bar */}
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">I am a...</label>
+              <div className="flex bg-slate-100 p-1 rounded-xl mb-6">
+                <button 
+                  type="button"
+                  onClick={() => setRole('CUSTOMER')} 
+                  className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${role === 'CUSTOMER' ? 'bg-white shadow-sm text-brand-deep' : 'text-slate-500'}`}
+                >
+                  Customer
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setRole('SELLER')} 
+                  className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${role === 'SELLER' ? 'bg-white shadow-sm text-brand-deep' : 'text-slate-500'}`}
+                >
+                  Seller
+                </button>
               </div>
             </div>
 
-            <button className="w-full bg-brand-teal hover:bg-[#00b388] text-brand-deep font-bold py-3 rounded-xl transition-all mt-6 shadow-md hover:shadow-lg active:scale-[0.98]">
-              {isSeller ? 'Create Seller Account' : 'Create Account'}
+            {/* Name Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+                <input 
+                  type="text" name="fullName" onChange={handleChange}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-teal/50 outline-none text-sm transition-all" 
+                  placeholder="John" 
+                />
+              </div>
+            </div>
+
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+              <input 
+                type="email" name="email" onChange={handleChange}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-teal/50 outline-none text-sm transition-all" 
+                placeholder="john@autohive.com" 
+              />
+            </div>
+
+            {/* Contact & Address */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Contact No</label>
+                <input 
+                  type="tel" name="contactNo" onChange={handleChange}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-teal/50 outline-none text-sm transition-all" 
+                  placeholder="+94 7X XXX XXXX" 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">City/Address</label>
+                <input 
+                  type="text" name="address" onChange={handleChange}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-teal/50 outline-none text-sm transition-all" 
+                  placeholder="Colombo, SL" 
+                />
+              </div>
+            </div>
+
+            {/* Password Grid */}
+            <div className="grid grid-cols-2 gap-4 pt-2">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                <input 
+                  type="password" name="password" onChange={handleChange}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-teal/50 outline-none text-sm transition-all" 
+                  placeholder="••••••••" 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Confirm</label>
+                <input 
+                  type="password" name="confirmPassword" onChange={handleChange}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-teal/50 outline-none text-sm transition-all" 
+                  placeholder="••••••••" 
+                />
+              </div>
+            </div>
+
+            {errors && (
+            <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded-md mb-4">
+              <p className="text-xs text-red-600 font-semibold">{errors}</p>
+            </div>
+          )}
+
+            <button type="button" className="w-full bg-brand-teal hover:bg-[#00b388] text-brand-deep font-bold py-3 rounded-xl transition-all mt-6 shadow-md active:scale-[0.98]" onClick={handleSubmit} disabled={loading}>
+              Register as {role.charAt(0) + role.slice(1).toLowerCase()}
             </button>
             
           </form>
 
           <p className="text-center text-sm text-slate-600 mt-6">
-            Already have an account? <Link href="/login" className="font-bold text-brand-deep hover:text-brand-teal transition-colors">Sign in here</Link>
+            Already have an account? <Link href="/login" className="font-bold text-brand-deep hover:text-brand-teal transition-colors">Sign in</Link>
           </p>
         </div>
       </div>

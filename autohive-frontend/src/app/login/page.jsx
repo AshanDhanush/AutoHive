@@ -28,8 +28,11 @@ export default function Login() {
       const data = response.data;
       localStorage.setItem("token", data.token);
       if (data.user.role === "SELLER") {
-        router.push("/"); // ✅ Fixed
+        router.push("/"); 
         console.log("Seller logged in successfully");
+      }else if (data.user.role === "CUSTOMER") {
+        router.push("/"); 
+        console.log("Customer logged in successfully");
       }
     } catch (err) {
       // 2. Set the error message based on the response

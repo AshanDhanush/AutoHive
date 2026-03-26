@@ -30,8 +30,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse register(RegisterRequest request) {
         var user = User.builder()
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
+                .fullName(request.getFullName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .contactNo(request.getContactNo())
@@ -52,8 +51,7 @@ public class AuthServiceImpl implements AuthService {
 
         var userDto = UserDto.builder()
                 .id(savedUser.getId())
-                .firstName(savedUser.getFirstName())
-                .lastName(savedUser.getLastName())
+                .firstName(savedUser.getFullName())
                 .email(savedUser.getEmail())
                 .contactNo(savedUser.getContactNo())
                 .address(savedUser.getAddress())
@@ -88,8 +86,7 @@ public class AuthServiceImpl implements AuthService {
 
         var userDto = UserDto.builder()
                 .id(user.getId())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
+                .firstName(user.getFullName())
                 .email(user.getEmail())
                 .contactNo(user.getContactNo())
                 .address(user.getAddress())
